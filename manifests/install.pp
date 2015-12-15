@@ -18,7 +18,7 @@ class python::install {
   $python = $::python::version ? {
     'system' => 'python',
     'pypy'   => 'pypy',
-    default  => $python::version,
+    default  => "${python::version}",
   }
 
   $pythondev = $::osfamily ? {
@@ -50,11 +50,6 @@ class python::install {
     name   => $python,
   }
 
-  package { 'virtualenv':
-    ensure  => $venv_ensure,
-    require => Package['python'],
-  }
-
   case $python::provider {
     pip: {
 
@@ -67,6 +62,9 @@ class python::install {
         ensure => $dev_ensure,
         name   => $pythondev,
       }
+
+      $gunicorn_package = 'gunicorn'
+      $virtualenv_package = 'virtualenv'
 
       # Install pip without pip, see https://pip.pypa.io/en/stable/installing/.
       exec { 'bootstrap pip':
@@ -102,6 +100,9 @@ class python::install {
         'CentOS' => 'present',
         default  => 'absent',
       }
+
+      $gunicorn_package = 'python-gunicorn'
+      $virtualenv_package = 'python-virtualenv'
 
       package { 'centos-release-SCL':
         ensure => $install_scl_repo_package,
@@ -139,6 +140,9 @@ class python::install {
         tag      => 'python-scl-repo',
       }
 
+      $gunicorn_package = 'python-gunicorn'
+      $virtualenv_package = 'python-virtualenv'
+
       Package <| title == 'python' |> {
         tag => 'python-scl-package',
       }
@@ -172,6 +176,9 @@ class python::install {
         ensure => $dev_ensure,
         name   => $pythondev,
       }
+
+      $gunicorn_package = 'gunicorn'
+      $virtualenv_package = 'virtualenv'
 
       if $::osfamily == 'RedHat' {
         if $pip_ensure != 'absent' {
@@ -208,7 +215,13 @@ class python::install {
       Package <| title == 'virtualenv' |> {
         name => $virtualenv_package,
       }
+
     }
+  }
+
+  package { $virtualenv_package:
+    ensure  => $venv_ensure,
+    require => Package['python'],
   }
 
   if $python::manage_gunicorn {
@@ -218,7 +231,7 @@ class python::install {
       default => $python::gunicorn,
     }
 
-    package { 'gunicorn':
+    package { $gunicorn_package:
       ensure => $gunicorn_ensure,
     }
   }
