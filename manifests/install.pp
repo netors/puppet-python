@@ -230,9 +230,10 @@ class python::install {
       false   => 'absent',
       default => $python::gunicorn,
     }
-
-    package { $gunicorn_package:
-      ensure => $gunicorn_ensure,
-    }
   }
+
+  package { $gunicorn_package:
+    ensure => $gunicorn_ensure,
+  }
+
 }
